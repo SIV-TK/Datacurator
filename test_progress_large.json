@@ -1,0 +1,19 @@
+{
+  "large_dataset": [
+    {"id": 1, "text": "First test document with substantial content for progress tracking demonstration"},
+    {"id": 2, "text": "Second document containing more detailed information for processing"},
+    {"id": 3, "text": "Third test entry with sample data to extend processing time"},
+    {"id": 4, "text": "Fourth document with additional content for better progress visibility"},
+    {"id": 5, "text": "Fifth test record with more text to make processing time visible"},
+    {"id": 6, "text": "Sixth document to further extend processing duration"},
+    {"id": 7, "text": "Seventh test entry for comprehensive progress tracking"},
+    {"id": 8, "text": "Eighth document with substantial content"},
+    {"id": 9, "text": "Ninth test record for extended processing time"},
+    {"id": 10, "text": "Final test document to complete the demonstration"}
+  ],
+  "metadata": {
+    "total_records": 10,
+    "created_for": "progress_tracking_test",
+    "file_size": "large"
+  }
+}

@@ -811,23 +811,25 @@ function getFileIcon(extension) {
 async function loadExistingFiles() {
     try {
         const response = await fetch('/api/files');
-        const files = await response.json();
+        const data = await response.json();
         
         const select = document.getElementById('existingFileSelect');
         select.innerHTML = '';
         
-        if (files.length === 0) {
+        if (!data.files || data.files.length === 0) {
             select.innerHTML = '<option value="">No files available</option>';
             return;
         }
         
-        files.forEach(file => {
+        data.files.forEach(file => {
             const option = document.createElement('option');
             option.value = file.id;
-            option.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            option.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            option.title = file.preview || file.name;
             select.appendChild(option);
         });
     } catch (error) {
+        console.error('Error loading files:', error);
         document.getElementById('existingFileSelect').innerHTML = 
             '<option value="">Error loading files</option>';
     }
@@ -929,8 +931,11 @@ async function startProcessing() {
             currentJobId = result.job_id;
             showToast('Processing job started successfully!', 'success');
             
-            // Start monitoring progress
-            progressInterval = setInterval(checkProgress, 2000);
+            // Immediate progress check to catch early updates
+            setTimeout(checkProgress, 100);
+            
+            // Start monitoring progress with faster polling
+            progressInterval = setInterval(checkProgress, 500);
         } else {
             throw new Error(result.detail || 'Failed to start processing job');
         }
@@ -953,6 +958,10 @@ async function checkProgress() {
             resetProcessingForm();
             clearInterval(progressInterval);
             showToast('Processing job completed!', 'success');
+            
+            // Show completion modal
+            showCompletionModal(job.details?.results);
+            
         } else if (job.status === 'failed') {
             updateProgress(0, `Failed: ${job.error || 'Unknown error'}`, '');
             resetProcessingForm();
@@ -1141,6 +1150,73 @@ function applyTemplate(templateName) {
 function previewFile(index) {
     // Implement file preview functionality
     showToast('File preview functionality coming soon!', 'info');
+}
+
+function showCompletionModal(result) {
+    // Create completion modal HTML
+    const modalHTML = `
+        <div class="modal fade" id="completionModal" tabindex="-1" aria-labelledby="completionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h1 class="modal-title fs-5" id="completionModalLabel">
+                            <i class="bi bi-check-circle me-2"></i>Processing Complete!
+                        </h1>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+                            </div>
+                            <h4 class="text-success">Successfully Processed!</h4>
+                            <p class="text-muted">Your files have been processed and saved to the database.</p>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <div class="h5 text-primary mb-0">${result?.total_files || 0}</div>
+                                    <small class="text-muted">Files</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <div class="h5 text-success mb-0">${result?.processed_items || 0}</div>
+                                    <small class="text-muted">Records</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <div class="h5 text-info mb-0">${result?.successful_files || 0}</div>
+                                    <small class="text-muted">Success</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="/datasets" class="btn btn-primary">
+                            <i class="bi bi-database me-1"></i>View Datasets
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('completionModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('completionModal'));
+    modal.show();
 }
 </script>
 {% endblock %}

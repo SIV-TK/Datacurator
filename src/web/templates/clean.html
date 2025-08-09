@@ -513,13 +513,18 @@ async function loadDatasets() {
         const select = document.getElementById('datasetSelect');
         select.innerHTML = '<option value="">Select a dataset...</option>';
         
-        datasets.forEach(dataset => {
-            const option = document.createElement('option');
-            option.value = dataset.id;
-            option.textContent = `${dataset.name} (${dataset.records} records)`;
-            select.appendChild(option);
-        });
+        if (datasets && datasets.length > 0) {
+            datasets.forEach(dataset => {
+                const option = document.createElement('option');
+                option.value = dataset.id;
+                option.textContent = `${dataset.name} (${dataset.total_records || 0} records)`;
+                select.appendChild(option);
+            });
+        } else {
+            select.innerHTML = '<option value="">No datasets available</option>';
+        }
     } catch (error) {
+        console.error('Error loading datasets:', error);
         document.getElementById('datasetSelect').innerHTML = 
             '<option value="">Error loading datasets</option>';
     }

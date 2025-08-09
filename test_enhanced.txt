@@ -1,0 +1,7 @@
+Sample test document for enhanced extraction testing.
+This document contains multiple paragraphs for processing.
+
+It should be extracted and chunked properly.
+The enhanced document extractor will process this content.
+
+Final paragraph to complete the test document.
