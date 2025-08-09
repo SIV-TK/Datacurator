@@ -1,93 +1,632 @@
 {% extends "base.html" %}
 
-{% block title %}Data Curator - File Processing{% endblock %}
+{% block title %}Data Processing - Data Curator Pro{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mb-4">File Processing</h1>
-    
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Process Files</h5>
-        </div>
-        <div class="card-body">
-            <form id="process-form" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="files" class="form-label">Files to Process</label>
-                    <input type="file" class="form-control" id="files" name="files" multiple required>
-                    <div class="form-text">
-                        Select files to process. Supported formats: CSV, JSON, JSONL, TXT, XML, HTML, PDF, DOCX, XLSX.
-                    </div>
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 gradient-text mb-2">
+                        <i class="bi bi-cpu me-3"></i>Data Processing
+                    </h1>
+                    <p class="text-muted">Process files, documents, and data with AI-powered extraction and enhancement</p>
                 </div>
-                
-                <div class="mb-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="recursive" name="recursive">
-                        <label class="form-check-label" for="recursive">Process Directories Recursively</label>
-                    </div>
-                    <div class="form-text">For ZIP and other archive files, process all files in subdirectories.</div>
-                </div>
-                
-                <button type="button" class="btn btn-primary" id="start-process">
-                    <i class="bi bi-file-earmark-text"></i> Start Processing
-                </button>
-            </form>
-        </div>
-    </div>
-    
-    <div class="card" id="result-card" style="display: none;">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Processing Results</h5>
-        </div>
-        <div class="card-body">
-            <div id="process-results">
-                <div class="spinner-container">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="ms-2">Processing in progress...</p>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#templatesModal">
+                        <i class="bi bi-file-earmark-text me-1"></i> Templates
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="bi bi-question-circle me-1"></i> Help
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">File Format Support</h5>
+
+    <div class="row">
+        <!-- Processing Configuration -->
+        <div class="col-lg-8 mb-4">
+            <div class="card feature-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>New Processing Job
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="processingForm">
+                        <!-- Input Method Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Input Method</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="inputMethod" id="fileUpload" value="files" checked>
+                                        <label class="form-check-label" for="fileUpload">
+                                            <i class="bi bi-file-earmark-arrow-up me-1"></i>Upload Files
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="inputMethod" id="folderUpload" value="folder">
+                                        <label class="form-check-label" for="folderUpload">
+                                            <i class="bi bi-folder2-open me-1"></i>Upload Folder
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="inputMethod" id="existingFiles" value="existing">
+                                        <label class="form-check-label" for="existingFiles">
+                                            <i class="bi bi-archive me-1"></i>Existing Files
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Processing Method Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Processing Method</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="processingMethod" id="basicExtraction" value="basic" checked>
+                                        <label class="form-check-label" for="basicExtraction">
+                                            <i class="bi bi-file-earmark-text me-1"></i>Basic Extraction
+                                        </label>
+                                        <div class="form-text small">Standard text extraction and processing</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="processingMethod" id="enhancedExtraction" value="enhanced">
+                                        <label class="form-check-label" for="enhancedExtraction">
+                                            <i class="bi bi-magic me-1"></i>Enhanced Extraction
+                                        </label>
+                                        <div class="form-text small">Advanced OCR, chunking, and quality filtering</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="processingMethod" id="aiProcessing" value="ai">
+                                        <label class="form-check-label" for="aiProcessing">
+                                            <i class="bi bi-cpu me-1"></i>AI Processing
+                                        </label>
+                                        <div class="form-text small">Full AI enhancement and analysis</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload Section -->
+                        <div id="filesSection" class="mb-4">
+                            <label for="inputFiles" class="form-label fw-semibold">Select Files to Process</label>
+                            <input class="form-control" type="file" id="inputFiles" multiple 
+                                   accept=".pdf,.doc,.docx,.txt,.md,.html,.json,.xml,.csv">
+                            <div class="form-text">
+                                Supports: PDF, Word, Text, Markdown, HTML, JSON, XML, CSV files. Max 50MB per file.
+                            </div>
+                            <div id="fileList" class="mt-2"></div>
+                        </div>
+
+                        <!-- Folder Upload Section -->
+                        <div id="folderSection" class="mb-4" style="display: none;">
+                            <label for="folderInput" class="form-label fw-semibold">Select Folder</label>
+                            <input class="form-control" type="file" id="folderInput" webkitdirectory directory>
+                            <div class="form-text">Upload an entire folder with documents to process</div>
+                        </div>
+
+                        <!-- Existing Files Section -->
+                        <div id="existingSection" class="mb-4" style="display: none;">
+                            <label for="existingFileSelect" class="form-label fw-semibold">Choose Existing Files</label>
+                            <select class="form-select" id="existingFileSelect" multiple size="5">
+                                <option value="">Loading files...</option>
+                            </select>
+                            <div class="form-text">Select from previously uploaded files</div>
+                        </div>
+
+                        <!-- Processing Options -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-gear-wide-connected me-1"></i>Processing Options
+                            </label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-primary-subtle">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title text-primary mb-3">Text Extraction</h6>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="extractText" checked>
+                                                <label class="form-check-label small" for="extractText">
+                                                    Extract all text content
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="preserveFormatting" checked>
+                                                <label class="form-check-label small" for="preserveFormatting">
+                                                    Preserve formatting
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="extractMetadata" checked>
+                                                <label class="form-check-label small" for="extractMetadata">
+                                                    Extract metadata
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="ocrImages">
+                                                <label class="form-check-label small" for="ocrImages">
+                                                    OCR for images/scanned docs
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-success-subtle">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title text-success mb-3">AI Enhancement</h6>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="generateSummary">
+                                                <label class="form-check-label small" for="generateSummary">
+                                                    Generate summaries
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="extractKeywords">
+                                                <label class="form-check-label small" for="extractKeywords">
+                                                    Extract keywords
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="categorizeContent">
+                                                <label class="form-check-label small" for="categorizeContent">
+                                                    Auto-categorization
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="sentimentAnalysis">
+                                                <label class="form-check-label small" for="sentimentAnalysis">
+                                                    Sentiment analysis
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Extraction Options (shown when Enhanced Extraction is selected) -->
+                        <div class="mb-4" id="enhancedOptions" style="display: none;">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-magic me-1"></i>Enhanced Extraction Configuration
+                            </label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-warning-subtle">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title text-warning mb-3">Document Processing</h6>
+                                            <div class="mb-3">
+                                                <label for="maxTokens" class="form-label small">Max Tokens per Chunk</label>
+                                                <select class="form-select form-select-sm" id="maxTokens">
+                                                    <option value="256">256 (Small)</option>
+                                                    <option value="512" selected>512 (Medium)</option>
+                                                    <option value="1024">1024 (Large)</option>
+                                                    <option value="2048">2048 (Extra Large)</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="minChunkSize" class="form-label small">Min Chunk Size (chars)</label>
+                                                <input type="number" class="form-control form-control-sm" id="minChunkSize" 
+                                                       value="100" min="50" max="1000">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="chunkOverlap" class="form-label small">Chunk Overlap (chars)</label>
+                                                <input type="number" class="form-control form-control-sm" id="chunkOverlap" 
+                                                       value="50" min="0" max="200">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-info-subtle">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title text-info mb-3">Quality & Language</h6>
+                                            <div class="mb-3">
+                                                <label for="targetLanguage" class="form-label small">Target Language</label>
+                                                <select class="form-select form-select-sm" id="targetLanguage">
+                                                    <option value="auto">Auto-detect (no filtering)</option>
+                                                    <option value="en" selected>English</option>
+                                                    <option value="es">Spanish</option>
+                                                    <option value="fr">French</option>
+                                                    <option value="de">German</option>
+                                                    <option value="zh">Chinese</option>
+                                                    <option value="ja">Japanese</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="textQuality" class="form-label small">Text Quality Threshold</label>
+                                                <input type="range" class="form-range" id="textQuality" 
+                                                       min="0" max="1" step="0.05" value="0.7">
+                                                <div class="d-flex justify-content-between small text-muted">
+                                                    <span>Low</span>
+                                                    <span id="qualityDisplay">0.7</span>
+                                                    <span>High</span>
+                                                </div>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="enableOCR" checked>
+                                                <label class="form-check-label small" for="enableOCR">
+                                                    Enable OCR for image text
+                                                </label>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="numWorkers" class="form-label small">Parallel Workers</label>
+                                                <select class="form-select form-select-sm" id="numWorkers">
+                                                    <option value="1">1 (Sequential)</option>
+                                                    <option value="2">2 Workers</option>
+                                                    <option value="4" selected>4 Workers</option>
+                                                    <option value="8">8 Workers</option>
+                                                    <option value="0">Auto-detect</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Settings -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <input type="checkbox" class="form-check-input me-2" id="showAdvanced">
+                                <label class="form-check-label fw-semibold" for="showAdvanced">
+                                    <i class="bi bi-sliders me-1"></i>Advanced Settings
+                                </label>
+                            </div>
+                            
+                            <div id="advancedSettings" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="chunkSize" class="form-label small">Text Chunk Size</label>
+                                            <select class="form-select form-select-sm" id="chunkSize">
+                                                <option value="1000">Small (1000 chars)</option>
+                                                <option value="2000" selected>Medium (2000 chars)</option>
+                                                <option value="4000">Large (4000 chars)</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="languageDetection" class="form-label small">Language Detection</label>
+                                            <select class="form-select form-select-sm" id="languageDetection">
+                                                <option value="auto">Auto-detect</option>
+                                                <option value="en">English</option>
+                                                <option value="es">Spanish</option>
+                                                <option value="fr">French</option>
+                                                <option value="de">German</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="qualityThreshold" class="form-label small">Quality Threshold</label>
+                                            <input type="range" class="form-range" id="qualityThreshold" min="0" max="1" step="0.1" value="0.5">
+                                            <div class="d-flex justify-content-between small text-muted">
+                                                <span>Low</span>
+                                                <span id="qualityValue">0.5</span>
+                                                <span>High</span>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="maxFileSize" class="form-label small">Max File Size (MB)</label>
+                                            <input type="number" class="form-control form-control-sm" id="maxFileSize" 
+                                                   value="50" min="1" max="500">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="parallelProcessing" checked>
+                                            <label class="form-check-label small" for="parallelProcessing">
+                                                Enable parallel processing
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="preserveStructure">
+                                            <label class="form-check-label small" for="preserveStructure">
+                                                Preserve document structure
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Output Configuration -->
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="outputName" class="form-label fw-semibold">Output Name</label>
+                                    <input type="text" class="form-control" id="outputName" 
+                                           placeholder="processed_documents">
+                                    <div class="form-text">Leave empty for auto-generated name</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="outputFormat" class="form-label fw-semibold">Output Format</label>
+                                    <select class="form-select" id="outputFormat">
+                                        <option value="json">JSON</option>
+                                        <option value="jsonl">JSONL</option>
+                                        <option value="csv">CSV</option>
+                                        <option value="markdown">Markdown</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="startProcessing">
+                                <i class="bi bi-play-circle me-2"></i>Start Processing
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <h6><i class="bi bi-file-earmark-text"></i> Text Files</h6>
-                    <ul class="list-unstyled">
-                        <li><span class="badge bg-success">TXT</span> Plain text files</li>
-                        <li><span class="badge bg-success">CSV</span> Comma-separated values</li>
-                        <li><span class="badge bg-success">TSV</span> Tab-separated values</li>
-                        <li><span class="badge bg-success">JSON</span> JSON files</li>
-                        <li><span class="badge bg-success">JSONL</span> JSON Lines</li>
-                        <li><span class="badge bg-success">XML</span> XML files</li>
-                    </ul>
+
+        <!-- Status & File Info -->
+        <div class="col-lg-4 mb-4">
+            <!-- Processing Statistics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>Processing Statistics
+                    </h6>
                 </div>
-                <div class="col-md-4">
-                    <h6><i class="bi bi-file-earmark-richtext"></i> Document Files</h6>
-                    <ul class="list-unstyled">
-                        <li><span class="badge bg-warning">PDF</span> PDF documents</li>
-                        <li><span class="badge bg-warning">DOCX</span> Word documents</li>
-                        <li><span class="badge bg-warning">XLSX</span> Excel spreadsheets</li>
-                        <li><span class="badge bg-warning">PPTX</span> PowerPoint presentations</li>
-                        <li><span class="badge bg-warning">HTML</span> HTML files</li>
-                        <li><span class="badge bg-warning">MD</span> Markdown files</li>
-                    </ul>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small">Files Queued</span>
+                        <strong id="filesQueued">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small">Successfully Processed</span>
+                        <strong class="text-success" id="filesProcessed">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small">Failed</span>
+                        <strong class="text-danger" id="filesFailed">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small">Total Size</span>
+                        <strong id="totalSize">0 MB</strong>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h6><i class="bi bi-file-earmark-zip"></i> Other Files</h6>
-                    <ul class="list-unstyled">
-                        <li><span class="badge bg-info">ZIP</span> ZIP archives</li>
-                        <li><span class="badge bg-info">TAR</span> TAR archives</li>
-                        <li><span class="badge bg-info">GZ</span> Gzipped files</li>
-                        <li><span class="badge bg-info">BZ2</span> Bzip2 files</li>
-                    </ul>
+            </div>
+
+            <!-- Progress Card -->
+            <div class="card mb-4" id="progressCard" style="display: none;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-activity me-2"></i>Progress
+                    </h6>
                 </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Overall Progress</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-gradient" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="small mb-3">
+                        <div class="mb-1">
+                            <strong>Current File:</strong>
+                            <div id="currentFile" class="text-muted">None</div>
+                        </div>
+                        <div>
+                            <strong>Status:</strong>
+                            <div id="currentStatus">Ready to start...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button class="btn btn-outline-danger btn-sm" id="stopProcessing" style="display: none;">
+                            <i class="bi bi-stop-circle me-1"></i>Stop Processing
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Type Distribution -->
+            <div class="card mb-4" id="fileTypesCard" style="display: none;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-file-bar-graph me-2"></i>File Types
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="fileTypesList"></div>
+                </div>
+            </div>
+
+            <!-- Processing Queue -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>Processing Queue
+                    </h6>
+                    <button class="btn btn-sm btn-outline-secondary" id="clearQueue">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="processingQueue">
+                        <div class="text-center py-3 text-muted">
+                            <i class="bi bi-inbox display-6"></i>
+                            <div class="mt-2">No files selected</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row mt-4" id="resultsSection" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-check-circle me-2"></i>Processing Results
+                    </h5>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm me-2" id="downloadResults">
+                            <i class="bi bi-download me-1"></i>Download
+                        </button>
+                        <button class="btn btn-outline-info btn-sm me-2" id="viewDetails">
+                            <i class="bi bi-eye me-1"></i>View Details
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" id="clearResults">
+                            <i class="bi bi-trash me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="resultsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Templates Modal -->
+<div class="modal fade" id="templatesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-text me-2"></i>Processing Templates
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="applyTemplate('document-extraction')">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-file-text me-2"></i>
+                            <div class="text-start">
+                                <div class="fw-semibold">Document Extraction</div>
+                                <small class="text-muted">Extract text from PDFs, Word docs</small>
+                            </div>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="applyTemplate('ai-enhancement')">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-stars me-2"></i>
+                            <div class="text-start">
+                                <div class="fw-semibold">AI Enhancement</div>
+                                <small class="text-muted">Summaries, keywords, categorization</small>
+                            </div>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="applyTemplate('ocr-processing')">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-camera me-2"></i>
+                            <div class="text-start">
+                                <div class="fw-semibold">OCR Processing</div>
+                                <small class="text-muted">Extract text from images and scanned docs</small>
+                            </div>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="applyTemplate('research-analysis')">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-graph-up me-2"></i>
+                            <div class="text-start">
+                                <div class="fw-semibold">Research Analysis</div>
+                                <small class="text-muted">Academic document processing</small>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-question-circle me-2"></i>Data Processing Help
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 class="text-primary">📄 What is Data Processing?</h6>
+                <p class="small mb-4">
+                    Data processing extracts, transforms, and enhances information from various file formats including 
+                    PDFs, Word documents, images, and structured data files.
+                </p>
+
+                <h6 class="text-success">🚀 Supported File Types</h6>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>Documents:</strong> PDF, DOC, DOCX, TXT, MD</li>
+                            <li><strong>Web:</strong> HTML, XML</li>
+                            <li><strong>Data:</strong> JSON, CSV, JSONL</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>Images:</strong> PNG, JPG (with OCR)</li>
+                            <li><strong>Archives:</strong> ZIP, TAR</li>
+                            <li><strong>Presentations:</strong> PPT, PPTX (coming soon)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h6 class="text-info">✨ Processing Features</h6>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>Text Extraction:</strong> Clean, structured text</li>
+                            <li><strong>Metadata:</strong> Author, creation date, etc.</li>
+                            <li><strong>OCR:</strong> Extract text from images</li>
+                            <li><strong>Formatting:</strong> Preserve document structure</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>AI Summaries:</strong> Auto-generated summaries</li>
+                            <li><strong>Keywords:</strong> Important terms extraction</li>
+                            <li><strong>Categories:</strong> Auto-classification</li>
+                            <li><strong>Sentiment:</strong> Emotional tone analysis</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h6 class="text-warning">💡 Best Practices</h6>
+                <ul class="small">
+                    <li>Upload files in small batches for better monitoring</li>
+                    <li>Use OCR only when necessary (slower processing)</li>
+                    <li>Enable parallel processing for large file sets</li>
+                    <li>Set appropriate quality thresholds for your use case</li>
+                    <li>Choose the right chunk size for your content type</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -96,115 +635,512 @@
 
 {% block extra_js %}
 <script>
-    // Start processing
-    function startProcessing() {
-        const fileInput = document.getElementById('files');
-        const recursive = document.getElementById('recursive').checked;
+let currentJobId = null;
+let progressInterval = null;
+let selectedFiles = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Input method toggle
+    document.querySelectorAll('input[name="inputMethod"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('filesSection').style.display = 
+                this.value === 'files' ? 'block' : 'none';
+            document.getElementById('folderSection').style.display = 
+                this.value === 'folder' ? 'block' : 'none';
+            document.getElementById('existingSection').style.display = 
+                this.value === 'existing' ? 'block' : 'none';
+            
+            if (this.value === 'existing') {
+                loadExistingFiles();
+            }
+        });
+    });
+
+    // Processing method toggle
+    document.querySelectorAll('input[name="processingMethod"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('enhancedOptions').style.display = 
+                this.value === 'enhanced' ? 'block' : 'none';
+        });
+    });
+
+    // Advanced settings toggle
+    document.getElementById('showAdvanced').addEventListener('change', function() {
+        document.getElementById('advancedSettings').style.display = 
+            this.checked ? 'block' : 'none';
+    });
+
+    // Quality threshold slider
+    document.getElementById('qualityThreshold').addEventListener('input', function() {
+        document.getElementById('qualityValue').textContent = this.value;
+    });
+
+    // Enhanced extraction text quality slider
+    document.getElementById('textQuality').addEventListener('input', function() {
+        document.getElementById('qualityDisplay').textContent = this.value;
+    });
+
+    // File input handlers
+    document.getElementById('inputFiles').addEventListener('change', handleFileSelection);
+    document.getElementById('folderInput').addEventListener('change', handleFolderSelection);
+
+    // Form submission
+    document.getElementById('processingForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await startProcessing();
+    });
+
+    // Control buttons
+    document.getElementById('stopProcessing').addEventListener('click', stopProcessing);
+    document.getElementById('clearQueue').addEventListener('click', clearQueue);
+});
+
+function handleFileSelection(event) {
+    selectedFiles = Array.from(event.target.files);
+    updateFileQueue();
+    updateFileTypeDistribution();
+}
+
+function handleFolderSelection(event) {
+    selectedFiles = Array.from(event.target.files);
+    updateFileQueue();
+    updateFileTypeDistribution();
+}
+
+function updateFileQueue() {
+    const queue = document.getElementById('processingQueue');
+    const queueCard = document.getElementById('fileTypesCard');
+    
+    if (selectedFiles.length === 0) {
+        queue.innerHTML = `
+            <div class="text-center py-3 text-muted">
+                <i class="bi bi-inbox display-6"></i>
+                <div class="mt-2">No files selected</div>
+            </div>
+        `;
+        queueCard.style.display = 'none';
+        updateStatistics();
+        return;
+    }
+
+    let totalSize = 0;
+    const queueHTML = selectedFiles.map((file, index) => {
+        totalSize += file.size;
+        const sizeStr = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const fileIcon = getFileIcon(fileExt);
         
-        if (fileInput.files.length === 0) {
-            alert('Please select at least one file');
+        return `
+            <div class="d-flex align-items-center mb-2 small">
+                <i class="bi bi-${fileIcon} me-2 text-primary"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold text-truncate" title="${file.name}">${file.name}</div>
+                    <div class="text-muted">${sizeStr}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+
+    queue.innerHTML = queueHTML;
+    queueCard.style.display = 'block';
+    updateStatistics(selectedFiles.length, 0, 0, totalSize);
+}
+
+function updateFileTypeDistribution() {
+    const types = {};
+    selectedFiles.forEach(file => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        types[ext] = (types[ext] || 0) + 1;
+    });
+
+    const typesList = document.getElementById('fileTypesList');
+    const typesHTML = Object.entries(types).map(([type, count]) => {
+        const percentage = Math.round((count / selectedFiles.length) * 100);
+        return `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small text-uppercase">${type}</span>
+                <div class="d-flex align-items-center">
+                    <div class="progress me-2" style="width: 60px; height: 8px;">
+                        <div class="progress-bar bg-primary" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="small fw-semibold">${count}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    typesList.innerHTML = typesHTML || '<div class="text-muted small">No files selected</div>';
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updateFileQueue();
+    updateFileTypeDistribution();
+}
+
+function clearQueue() {
+    selectedFiles = [];
+    document.getElementById('inputFiles').value = '';
+    document.getElementById('folderInput').value = '';
+    updateFileQueue();
+    updateFileTypeDistribution();
+}
+
+function getFileIcon(extension) {
+    const icons = {
+        'pdf': 'file-earmark-pdf',
+        'doc': 'file-earmark-word',
+        'docx': 'file-earmark-word',
+        'txt': 'file-earmark-text',
+        'md': 'file-earmark-text',
+        'html': 'file-earmark-code',
+        'xml': 'file-earmark-code',
+        'json': 'file-earmark-code',
+        'csv': 'file-earmark-spreadsheet',
+        'jpg': 'file-earmark-image',
+        'jpeg': 'file-earmark-image',
+        'png': 'file-earmark-image',
+        'zip': 'file-earmark-zip'
+    };
+    return icons[extension] || 'file-earmark';
+}
+
+async function loadExistingFiles() {
+    try {
+        const response = await fetch('/api/files');
+        const files = await response.json();
+        
+        const select = document.getElementById('existingFileSelect');
+        select.innerHTML = '';
+        
+        if (files.length === 0) {
+            select.innerHTML = '<option value="">No files available</option>';
             return;
         }
         
-        // Show results card
-        document.getElementById('result-card').style.display = 'block';
-        
-        // Create form data
-        const formData = new FormData();
-        for (const file of fileInput.files) {
-            formData.append('files', file);
-        }
-        formData.append('recursive', recursive);
-        
-        // Start processing job
-        fetch('/api/process', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            const jobId = data.job_id;
-            
-            // Poll job status
-            const resultsContainer = document.getElementById('process-results');
-            
-            const checkJobStatus = () => {
-                fetch(`/api/jobs/${jobId}`)
-                    .then(response => response.json())
-                    .then(job => {
-                        if (job.status === 'pending' || job.status === 'running') {
-                            // Still running, continue polling
-                            setTimeout(checkJobStatus, 2000);
-                            
-                            // Update status message
-                            resultsContainer.innerHTML = `
-                                <div class="alert alert-info">
-                                    <div class="d-flex align-items-center">
-                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <div>
-                                            <strong>Job ID:</strong> ${jobId}<br>
-                                            <strong>Status:</strong> ${job.status}<br>
-                                            <strong>Files:</strong> ${job.details.file_count || 0}<br>
-                                            <strong>Started:</strong> ${formatDate(job.created_at)}
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        } else if (job.status === 'completed') {
-                            // Job completed
-                            resultsContainer.innerHTML = `
-                                <div class="alert alert-success">
-                                    <strong>Processing completed!</strong><br>
-                                    <strong>Job ID:</strong> ${jobId}<br>
-                                    <strong>Dataset ID:</strong> ${job.details.dataset_id}<br>
-                                    <strong>Records:</strong> ${job.details.record_count || 0}<br>
-                                    <strong>Completed:</strong> ${formatDate(job.created_at)}
-                                </div>
-                                <a href="/datasets" class="btn btn-primary">
-                                    <i class="bi bi-database"></i> View Dataset
-                                </a>
-                            `;
-                        } else {
-                            // Job failed
-                            resultsContainer.innerHTML = `
-                                <div class="alert alert-danger">
-                                    <strong>Processing failed!</strong><br>
-                                    <strong>Job ID:</strong> ${jobId}<br>
-                                    <strong>Error:</strong> ${job.details.error || 'Unknown error'}<br>
-                                    <strong>Time:</strong> ${formatDate(job.created_at)}
-                                </div>
-                            `;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error checking job status:', error);
-                        resultsContainer.innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle"></i> Error checking job status: ${error.message}
-                            </div>
-                        `;
-                    });
-            };
-            
-            // Start polling
-            checkJobStatus();
-        })
-        .catch(error => {
-            console.error('Error starting process job:', error);
-            document.getElementById('process-results').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle"></i> Error starting process job: ${error.message}
-                </div>
-            `;
+        files.forEach(file => {
+            const option = document.createElement('option');
+            option.value = file.id;
+            option.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            select.appendChild(option);
         });
+    } catch (error) {
+        document.getElementById('existingFileSelect').innerHTML = 
+            '<option value="">Error loading files</option>';
     }
+}
+
+async function startProcessing() {
+    const inputMethod = document.querySelector('input[name="inputMethod"]:checked').value;
+    const processingMethod = document.querySelector('input[name="processingMethod"]:checked').value;
     
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
-        // Start processing button
-        document.getElementById('start-process').addEventListener('click', startProcessing);
+    if (inputMethod === 'files' || inputMethod === 'folder') {
+        if (selectedFiles.length === 0) {
+            showToast('Please select files to process', 'warning');
+            return;
+        }
+    } else if (inputMethod === 'existing') {
+        const selectedExisting = Array.from(document.getElementById('existingFileSelect').selectedOptions);
+        if (selectedExisting.length === 0) {
+            showToast('Please select existing files', 'warning');
+            return;
+        }
+    }
+
+    const formData = new FormData();
+    
+    // Add files
+    if (inputMethod === 'files' || inputMethod === 'folder') {
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
+        });
+    } else {
+        const selectedIds = Array.from(document.getElementById('existingFileSelect').selectedOptions)
+            .map(option => option.value);
+        formData.append('existing_file_ids', JSON.stringify(selectedIds));
+    }
+
+    // Prepare request data based on processing method
+    let requestData = {
+        input_method: inputMethod,
+        processing_method: processingMethod,
+        
+        // Processing options
+        extract_text: document.getElementById('extractText').checked,
+        preserve_formatting: document.getElementById('preserveFormatting').checked,
+        extract_metadata: document.getElementById('extractMetadata').checked,
+        ocr_images: document.getElementById('ocrImages').checked,
+        generate_summary: document.getElementById('generateSummary').checked,
+        extract_keywords: document.getElementById('extractKeywords').checked,
+        categorize_content: document.getElementById('categorizeContent').checked,
+        sentiment_analysis: document.getElementById('sentimentAnalysis').checked,
+        
+        // Output configuration
+        output_name: document.getElementById('outputName').value || null,
+        output_format: document.getElementById('outputFormat').value
+    };
+
+    // Add enhanced extraction options if that method is selected
+    if (processingMethod === 'enhanced') {
+        requestData = {
+            ...requestData,
+            max_tokens: parseInt(document.getElementById('maxTokens').value),
+            min_chunk_size: parseInt(document.getElementById('minChunkSize').value),
+            chunk_overlap: parseInt(document.getElementById('chunkOverlap').value),
+            target_language: document.getElementById('targetLanguage').value,
+            text_quality: parseFloat(document.getElementById('textQuality').value),
+            enable_ocr: document.getElementById('enableOCR').checked,
+            num_workers: parseInt(document.getElementById('numWorkers').value) || 4
+        };
+    }
+
+    // Add advanced settings if enabled
+    if (document.getElementById('showAdvanced').checked) {
+        requestData.quality_threshold = parseFloat(document.getElementById('qualityThreshold').value);
+        requestData.max_file_size = parseInt(document.getElementById('maxFileSize').value);
+        requestData.parallel_processing = document.getElementById('parallelProcessing').checked;
+        requestData.preserve_structure = document.getElementById('preserveStructure').checked;
+    }
+
+    formData.append('request_data', JSON.stringify(requestData));
+
+    try {
+        // Show progress card
+        document.getElementById('progressCard').style.display = 'block';
+        document.getElementById('startProcessing').disabled = true;
+        document.getElementById('stopProcessing').style.display = 'block';
+        
+        updateProgress(0, 'Starting processing job...', '');
+
+        // Choose the appropriate API endpoint based on processing method
+        const apiEndpoint = processingMethod === 'enhanced' ? '/api/enhanced-extract' : '/api/process';
+        
+        const response = await fetch(apiEndpoint, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            currentJobId = result.job_id;
+            showToast('Processing job started successfully!', 'success');
+            
+            // Start monitoring progress
+            progressInterval = setInterval(checkProgress, 2000);
+        } else {
+            throw new Error(result.detail || 'Failed to start processing job');
+        }
+    } catch (error) {
+        showToast(`Error: ${error.message}`, 'danger');
+        resetProcessingForm();
+    }
+}
+
+async function checkProgress() {
+    if (!currentJobId) return;
+
+    try {
+        const response = await fetch(`/api/jobs/${currentJobId}`);
+        const job = await response.json();
+
+        if (job.status === 'completed') {
+            updateProgress(100, 'Processing completed successfully!', '');
+            showResults(job.result);
+            resetProcessingForm();
+            clearInterval(progressInterval);
+            showToast('Processing job completed!', 'success');
+        } else if (job.status === 'failed') {
+            updateProgress(0, `Failed: ${job.error || 'Unknown error'}`, '');
+            resetProcessingForm();
+            clearInterval(progressInterval);
+            showToast('Processing job failed', 'danger');
+        } else {
+            const progress = job.progress || 0;
+            const currentFile = job.current_file || '';
+            const status = job.status_message || 'Processing...';
+            updateProgress(progress, status, currentFile);
+            
+            // Update statistics
+            if (job.statistics) {
+                updateStatistics(
+                    job.statistics.total || selectedFiles.length,
+                    job.statistics.processed || 0,
+                    job.statistics.failed || 0,
+                    null // Keep current total size
+                );
+            }
+        }
+    } catch (error) {
+        console.error('Error checking progress:', error);
+    }
+}
+
+function updateProgress(percent, message, currentFile) {
+    document.getElementById('progressPercent').textContent = `${Math.round(percent)}%`;
+    document.getElementById('progressBar').style.width = `${percent}%`;
+    document.getElementById('currentStatus').textContent = message;
+    document.getElementById('currentFile').textContent = currentFile || 'None';
+}
+
+function updateStatistics(queued = 0, processed = 0, failed = 0, totalSize = null) {
+    document.getElementById('filesQueued').textContent = queued;
+    document.getElementById('filesProcessed').textContent = processed;
+    document.getElementById('filesFailed').textContent = failed;
+    
+    if (totalSize !== null) {
+        document.getElementById('totalSize').textContent = `${(totalSize / 1024 / 1024).toFixed(2)} MB`;
+    }
+}
+
+function stopProcessing() {
+    if (currentJobId && progressInterval) {
+        clearInterval(progressInterval);
+        currentJobId = null;
+        resetProcessingForm();
+        showToast('Processing stopped', 'info');
+    }
+}
+
+function resetProcessingForm() {
+    document.getElementById('startProcessing').disabled = false;
+    document.getElementById('stopProcessing').style.display = 'none';
+    document.getElementById('progressCard').style.display = 'none';
+}
+
+function showResults(results) {
+    const resultsSection = document.getElementById('resultsSection');
+    const container = document.getElementById('resultsContainer');
+    
+    const summary = results.summary || {};
+    const processedFiles = results.processed_files || [];
+    
+    const resultsHTML = `
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="display-6 text-success">${summary.total_processed || 0}</div>
+                    <div class="small text-muted">Files Processed</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="display-6 text-primary">${summary.total_extracted_text || 0}</div>
+                    <div class="small text-muted">Text Extractions</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="display-6 text-info">${summary.total_enhancements || 0}</div>
+                    <div class="small text-muted">AI Enhancements</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="display-6 text-warning">${summary.processing_time || 0}s</div>
+                    <div class="small text-muted">Processing Time</div>
+                </div>
+            </div>
+        </div>
+        
+        ${processedFiles.length > 0 ? `
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Status</th>
+                            <th>Text Length</th>
+                            <th>Enhancements</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${processedFiles.map((file, index) => `
+                            <tr>
+                                <td>
+                                    <i class="bi bi-${getFileIcon(file.name.split('.').pop())} me-2"></i>
+                                    ${file.name}
+                                </td>
+                                <td>
+                                    <span class="badge bg-${file.status === 'success' ? 'success' : 'danger'}">
+                                        ${file.status}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${file.text_length ? `${file.text_length} chars` : 'N/A'}
+                                </td>
+                                <td>
+                                    ${file.enhancements ? file.enhancements.join(', ') : 'None'}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="previewFile(${index})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        ` : ''}
+        
+        <div class="text-muted small mt-3">
+            Output location: <code>${results.output_path || 'processed_documents.json'}</code>
+        </div>
+    `;
+    
+    container.innerHTML = resultsHTML;
+    resultsSection.style.display = 'block';
+}
+
+function applyTemplate(templateName) {
+    // Reset all checkboxes first
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (!['showAdvanced', 'showThresholds'].includes(cb.id)) {
+            cb.checked = false;
+        }
     });
+
+    switch (templateName) {
+        case 'document-extraction':
+            document.getElementById('extractText').checked = true;
+            document.getElementById('preserveFormatting').checked = true;
+            document.getElementById('extractMetadata').checked = true;
+            break;
+        case 'ai-enhancement':
+            document.getElementById('extractText').checked = true;
+            document.getElementById('generateSummary').checked = true;
+            document.getElementById('extractKeywords').checked = true;
+            document.getElementById('categorizeContent').checked = true;
+            document.getElementById('sentimentAnalysis').checked = true;
+            break;
+        case 'ocr-processing':
+            document.getElementById('extractText').checked = true;
+            document.getElementById('ocrImages').checked = true;
+            document.getElementById('preserveFormatting').checked = true;
+            break;
+        case 'research-analysis':
+            document.getElementById('extractText').checked = true;
+            document.getElementById('preserveFormatting').checked = true;
+            document.getElementById('extractMetadata').checked = true;
+            document.getElementById('generateSummary').checked = true;
+            document.getElementById('extractKeywords').checked = true;
+            document.getElementById('categorizeContent').checked = true;
+            break;
+    }
+
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('templatesModal')).hide();
+    showToast(`Applied ${templateName} template`, 'success');
+}
+
+function previewFile(index) {
+    // Implement file preview functionality
+    showToast('File preview functionality coming soon!', 'info');
+}
 </script>
 {% endblock %}

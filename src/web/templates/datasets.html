@@ -1,87 +1,318 @@
 {% extends "base.html" %}
 
-{% block title %}Data Curator - Datasets{% endblock %}
+{% block title %}Datasets - Data Curator Pro{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Datasets</h1>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDatasetModal">
-            <i class="bi bi-plus-lg"></i> Create Dataset
-        </button>
-    </div>
-    
-    <!-- Dataset List -->
-    <div class="card">
-        <div class="card-body">
-            <div id="datasets-container">
-                <div class="spinner-container">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 gradient-text mb-2">
+                        <i class="bi bi-database me-3"></i>Datasets
+                    </h1>
+                    <p class="text-muted">Manage your datasets, explore data, and track processing history</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="bi bi-upload me-1"></i> Import
+                    </button>
+                    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                    <button class="btn btn-primary" id="refreshDatasets">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Dataset Detail Panel -->
-    <div class="modal fade" id="datasetDetailModal" tabindex="-1" aria-labelledby="datasetDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="datasetDetailModalLabel">Dataset Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon bg-primary-subtle text-primary mb-3">
+                        <i class="bi bi-collection display-6"></i>
+                    </div>
+                    <h3 class="stats-number" id="totalDatasets">0</h3>
+                    <p class="stats-label">Total Datasets</p>
                 </div>
-                <div class="modal-body">
-                    <div id="dataset-detail-content">
-                        <div class="spinner-container">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon bg-success-subtle text-success mb-3">
+                        <i class="bi bi-files display-6"></i>
+                    </div>
+                    <h3 class="stats-number" id="totalRecords">0</h3>
+                    <p class="stats-label">Total Records</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon bg-info-subtle text-info mb-3">
+                        <i class="bi bi-hdd display-6"></i>
+                    </div>
+                    <h3 class="stats-number" id="totalSize">0 MB</h3>
+                    <p class="stats-label">Storage Used</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <div class="stats-icon bg-warning-subtle text-warning mb-3">
+                        <i class="bi bi-clock display-6"></i>
+                    </div>
+                    <h3 class="stats-number" id="recentActivity">0</h3>
+                    <p class="stats-label">Last 24h</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="searchInput" 
+                                       placeholder="Search datasets...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="typeFilter">
+                                <option value="">All Types</option>
+                                <option value="scraped">Scraped Data</option>
+                                <option value="processed">Processed Files</option>
+                                <option value="cleaned">Cleaned Data</option>
+                                <option value="enhanced">AI Enhanced</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="sizeFilter">
+                                <option value="">All Sizes</option>
+                                <option value="small">Small (&lt; 1MB)</option>
+                                <option value="medium">Medium (1-10MB)</option>
+                                <option value="large">Large (&gt; 10MB)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="sortBy">
+                                <option value="created_desc">Newest First</option>
+                                <option value="created_asc">Oldest First</option>
+                                <option value="name_asc">Name A-Z</option>
+                                <option value="size_desc">Largest First</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="gridView" checked>
+                                <label class="form-check-label" for="gridView">
+                                    <i class="bi bi-grid-3x3-gap me-1"></i>Grid View
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="showDetails">
+                                <label class="form-check-label" for="showDetails">
+                                    <i class="bi bi-info-circle me-1"></i>Details
+                                </label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Create Dataset Modal -->
-    <div class="modal fade" id="createDatasetModal" tabindex="-1" aria-labelledby="createDatasetModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createDatasetModalLabel">Create New Dataset</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+    <!-- Datasets Display -->
+    <div class="row" id="datasetsContainer">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="loading-spinner mb-3"></div>
+                <p class="text-muted">Loading datasets...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="row mt-4" id="paginationContainer" style="display: none;">
+        <div class="col-12">
+            <nav aria-label="Datasets pagination">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Pagination will be dynamically generated -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Details Modal -->
+<div class="modal fade" id="datasetModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="datasetModalTitle">
+                    <i class="bi bi-database me-2"></i>Dataset Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="datasetDetails">
+                    <div class="text-center py-3">
+                        <div class="loading-spinner"></div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form id="create-dataset-form">
-                        <div class="mb-3">
-                            <label for="dataset-name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="dataset-name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="dataset-description" class="form-label">Description</label>
-                            <textarea class="form-control" id="dataset-description" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="dataset-source-type" class="form-label">Source Type</label>
-                            <select class="form-select" id="dataset-source-type" required>
-                                <option value="web">Web</option>
-                                <option value="file">File</option>
-                                <option value="api">API</option>
-                                <option value="database">Database</option>
-                                <option value="manual">Manual</option>
-                            </select>
-                        </div>
-                    </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-primary" id="editDataset">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </button>
+                <button type="button" class="btn btn-outline-success" id="exportDataset">
+                    <i class="bi bi-download me-1"></i>Export
+                </button>
+                <button type="button" class="btn btn-outline-danger" id="deleteDataset">
+                    <i class="bi bi-trash me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-upload me-2"></i>Import Dataset
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="importFile" 
+                               accept=".json,.jsonl,.csv,.txt">
+                        <div class="form-text">Supports JSON, JSONL, CSV, and text files</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="datasetName" class="form-label">Dataset Name</label>
+                        <input type="text" class="form-control" id="datasetName" 
+                               placeholder="Enter dataset name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="datasetDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="datasetDescription" rows="3"
+                                  placeholder="Optional description"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="datasetTags" class="form-label">Tags</label>
+                        <input type="text" class="form-control" id="datasetTags" 
+                               placeholder="tag1, tag2, tag3">
+                        <div class="form-text">Comma-separated tags for categorization</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="importDataset">
+                    <i class="bi bi-upload me-1"></i>Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-download me-2"></i>Export Datasets
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Datasets to Export</label>
+                    <div id="exportDatasetsList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Will be populated dynamically -->
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="create-dataset-button">Create</button>
+                <div class="mb-3">
+                    <label for="exportFormat" class="form-label">Export Format</label>
+                    <select class="form-select" id="exportFormat">
+                        <option value="json">JSON</option>
+                        <option value="jsonl">JSONL</option>
+                        <option value="csv">CSV</option>
+                        <option value="zip">ZIP Archive</option>
+                    </select>
                 </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="includeMetadata" checked>
+                    <label class="form-check-label" for="includeMetadata">
+                        Include metadata and statistics
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="startExport">
+                    <i class="bi bi-download me-1"></i>Export Selected
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this dataset?</p>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action cannot be undone. All data will be permanently removed.
+                </div>
+                <div id="deleteDatasetInfo"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="bi bi-trash me-1"></i>Delete Dataset
+                </button>
             </div>
         </div>
     </div>
@@ -90,249 +321,619 @@
 
 {% block extra_js %}
 <script>
+let datasets = [];
+let filteredDatasets = [];
+let currentPage = 1;
+let itemsPerPage = 12;
+let currentDatasetId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
     // Load datasets
-    function loadDatasets() {
-        const datasetsContainer = document.getElementById('datasets-container');
+    loadDatasets();
+
+    // Search and filter handlers
+    document.getElementById('searchInput').addEventListener('input', debounce(filterDatasets, 300));
+    document.getElementById('typeFilter').addEventListener('change', filterDatasets);
+    document.getElementById('sizeFilter').addEventListener('change', filterDatasets);
+    document.getElementById('sortBy').addEventListener('change', filterDatasets);
+
+    // View toggle handlers
+    document.getElementById('gridView').addEventListener('change', toggleView);
+    document.getElementById('showDetails').addEventListener('change', toggleView);
+
+    // Button handlers
+    document.getElementById('refreshDatasets').addEventListener('click', loadDatasets);
+    document.getElementById('importDataset').addEventListener('click', importDataset);
+    document.getElementById('startExport').addEventListener('click', exportDatasets);
+
+    // Modal handlers
+    document.getElementById('editDataset').addEventListener('click', editDataset);
+    document.getElementById('exportDataset').addEventListener('click', exportSingleDataset);
+    document.getElementById('deleteDataset').addEventListener('click', showDeleteConfirm);
+    document.getElementById('confirmDelete').addEventListener('click', deleteDataset);
+});
+
+async function loadDatasets() {
+    try {
+        showLoading();
         
-        fetch('/api/datasets')
-            .then(response => response.json())
-            .then(data => {
-                if (data.length === 0) {
-                    datasetsContainer.innerHTML = `
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> No datasets found. Create a new dataset to get started.
-                        </div>
-                    `;
-                    return;
-                }
-                
-                let html = `
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Source</th>
-                                    <th>Records</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                data.forEach(dataset => {
-                    html += `
-                        <tr>
-                            <td>${dataset.id}</td>
-                            <td>${dataset.name}</td>
-                            <td><span class="badge bg-secondary">${dataset.source_type}</span></td>
-                            <td>${dataset.total_records} (${dataset.cleaned_records} cleaned)</td>
-                            <td>${formatDate(dataset.created_at)}</td>
-                            <td>
-                                <button class="btn btn-sm btn-info view-dataset" data-id="${dataset.id}">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                html += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                
-                datasetsContainer.innerHTML = html;
-                
-                // Attach event listeners to view buttons
-                document.querySelectorAll('.view-dataset').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const datasetId = this.getAttribute('data-id');
-                        showDatasetDetail(datasetId);
-                    });
-                });
-            })
-            .catch(error => {
-                console.error('Error loading datasets:', error);
-                datasetsContainer.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle"></i> Error loading datasets: ${error.message}
-                    </div>
-                `;
-            });
+        const response = await fetch('/api/datasets');
+        const data = await response.json();
+        
+        if (response.ok) {
+            datasets = data.datasets || [];
+            updateStatistics(data.statistics || {});
+            filterDatasets();
+        } else {
+            throw new Error(data.detail || 'Failed to load datasets');
+        }
+    } catch (error) {
+        showError('Failed to load datasets: ' + error.message);
     }
-    
-    // Show dataset detail
-    function showDatasetDetail(datasetId) {
-        const modal = new bootstrap.Modal(document.getElementById('datasetDetailModal'));
-        modal.show();
-        
-        const detailContent = document.getElementById('dataset-detail-content');
-        detailContent.innerHTML = `
-            <div class="spinner-container">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+}
+
+function updateStatistics(stats) {
+    document.getElementById('totalDatasets').textContent = stats.total_datasets || 0;
+    document.getElementById('totalRecords').textContent = (stats.total_records || 0).toLocaleString();
+    document.getElementById('totalSize').textContent = formatFileSize(stats.total_size || 0);
+    document.getElementById('recentActivity').textContent = stats.recent_activity || 0;
+}
+
+function filterDatasets() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const typeFilter = document.getElementById('typeFilter').value;
+    const sizeFilter = document.getElementById('sizeFilter').value;
+    const sortBy = document.getElementById('sortBy').value;
+
+    // Filter datasets
+    filteredDatasets = datasets.filter(dataset => {
+        const matchesSearch = !searchTerm || 
+            dataset.name.toLowerCase().includes(searchTerm) ||
+            (dataset.description || '').toLowerCase().includes(searchTerm) ||
+            (dataset.tags || []).some(tag => tag.toLowerCase().includes(searchTerm));
+
+        const matchesType = !typeFilter || dataset.type === typeFilter;
+
+        const matchesSize = !sizeFilter || 
+            (sizeFilter === 'small' && dataset.size < 1024 * 1024) ||
+            (sizeFilter === 'medium' && dataset.size >= 1024 * 1024 && dataset.size < 10 * 1024 * 1024) ||
+            (sizeFilter === 'large' && dataset.size >= 10 * 1024 * 1024);
+
+        return matchesSearch && matchesType && matchesSize;
+    });
+
+    // Sort datasets
+    filteredDatasets.sort((a, b) => {
+        switch (sortBy) {
+            case 'created_asc':
+                return new Date(a.created_at) - new Date(b.created_at);
+            case 'created_desc':
+                return new Date(b.created_at) - new Date(a.created_at);
+            case 'name_asc':
+                return a.name.localeCompare(b.name);
+            case 'size_desc':
+                return b.size - a.size;
+            default:
+                return new Date(b.created_at) - new Date(a.created_at);
+        }
+    });
+
+    currentPage = 1;
+    displayDatasets();
+    updatePagination();
+}
+
+function displayDatasets() {
+    const container = document.getElementById('datasetsContainer');
+    const isGridView = document.getElementById('gridView').checked;
+    const showDetails = document.getElementById('showDetails').checked;
+
+    if (filteredDatasets.length === 0) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">No datasets found</h4>
+                    <p class="text-muted">Try adjusting your search or filters</p>
                 </div>
             </div>
         `;
+        return;
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredDatasets.length);
+    const pageDatasets = filteredDatasets.slice(startIndex, endIndex);
+
+    if (isGridView) {
+        displayGridView(container, pageDatasets, showDetails);
+    } else {
+        displayListView(container, pageDatasets, showDetails);
+    }
+}
+
+function displayGridView(container, datasets, showDetails) {
+    const datasetsHTML = datasets.map(dataset => {
+        const typeIcon = getTypeIcon(dataset.type);
+        const typeColor = getTypeColor(dataset.type);
         
-        // Fetch dataset details
-        fetch(`/api/datasets/${datasetId}`)
-            .then(response => response.json())
-            .then(dataset => {
-                // Fetch records for this dataset
-                return fetch(`/api/datasets/${datasetId}/records`)
-                    .then(response => response.json())
-                    .then(records => {
-                        return { dataset, records };
-                    });
-            })
-            .then(data => {
-                const { dataset, records } = data;
-                
-                let html = `
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h3>${dataset.name}</h3>
-                            <p>${dataset.description || 'No description'}</p>
-                            <div class="mb-3">
-                                <strong>Source Type:</strong> ${dataset.source_type}
+        return `
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card feature-card h-100" onclick="showDatasetDetails('${dataset.id}')">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="dataset-icon bg-${typeColor}-subtle text-${typeColor} me-3">
+                                <i class="bi bi-${typeIcon}"></i>
                             </div>
-                            <div class="mb-3">
-                                <strong>Created:</strong> ${formatDate(dataset.created_at)}
-                            </div>
-                            <div class="mb-3">
-                                <strong>Total Records:</strong> ${dataset.total_records}
-                            </div>
-                            <div class="mb-3">
-                                <strong>Cleaned Records:</strong> ${dataset.cleaned_records}
+                            <div class="flex-grow-1">
+                                <h5 class="card-title mb-1 text-truncate" title="${dataset.name}">${dataset.name}</h5>
+                                <small class="text-muted text-capitalize">${dataset.type}</small>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Configuration</h5>
-                                </div>
-                                <div class="card-body">
-                                    <pre class="bg-light p-3 rounded"><code>${JSON.stringify(dataset.config || {}, null, 2)}</code></pre>
+                        
+                        ${showDetails ? `
+                            <div class="mb-3">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="small text-muted">Records</div>
+                                        <div class="fw-semibold">${dataset.record_count?.toLocaleString() || 0}</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Size</div>
+                                        <div class="fw-semibold">${formatFileSize(dataset.size)}</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Quality</div>
+                                        <div class="fw-semibold">${Math.round((dataset.quality_score || 0) * 100)}%</div>
+                                    </div>
                                 </div>
                             </div>
+                        ` : ''}
+                        
+                        ${dataset.description ? `
+                            <p class="card-text small text-muted mb-3 text-truncate-2" title="${dataset.description}">
+                                ${dataset.description}
+                            </p>
+                        ` : ''}
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-1">
+                                ${(dataset.tags || []).slice(0, 2).map(tag => 
+                                    `<span class="badge bg-secondary-subtle text-secondary">${tag}</span>`
+                                ).join('')}
+                                ${dataset.tags && dataset.tags.length > 2 ? 
+                                    `<span class="badge bg-light text-muted">+${dataset.tags.length - 2}</span>` : ''
+                                }
+                            </div>
+                            <small class="text-muted">${formatRelativeTime(dataset.created_at)}</small>
                         </div>
                     </div>
-                    
-                    <h4>Records (${records.length})</h4>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Content</th>
-                                    <th>Processed</th>
-                                    <th>Valid</th>
-                                    <th>Quality</th>
-                                    <th>Created</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                if (records.length === 0) {
-                    html += `
-                        <tr>
-                            <td colspan="6" class="text-center">No records found</td>
-                        </tr>
-                    `;
-                } else {
-                    records.forEach(record => {
-                        const contentPreview = record.content.length > 100 
-                            ? record.content.substring(0, 100) + '...' 
-                            : record.content;
-                            
-                        const processedPreview = record.processed_content && record.processed_content.length > 100
-                            ? record.processed_content.substring(0, 100) + '...'
-                            : record.processed_content || 'Not processed';
-                            
-                        html += `
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = datasetsHTML;
+}
+
+function displayListView(container, datasets, showDetails) {
+    const datasetsHTML = `
+        <div class="col-12">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <td>${record.id}</td>
-                                <td>${contentPreview}</td>
-                                <td>${processedPreview}</td>
-                                <td>${record.is_valid ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-danger">No</span>'}</td>
-                                <td>${record.quality_score !== null ? record.quality_score.toFixed(2) : 'N/A'}</td>
-                                <td>${formatDate(record.created_at)}</td>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Records</th>
+                                <th>Size</th>
+                                ${showDetails ? '<th>Quality</th><th>Tags</th>' : ''}
+                                <th>Created</th>
+                                <th>Actions</th>
                             </tr>
-                        `;
-                    });
-                }
-                
-                html += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                
-                detailContent.innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Error loading dataset details:', error);
-                detailContent.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle"></i> Error loading dataset details: ${error.message}
-                    </div>
-                `;
-            });
-    }
+                        </thead>
+                        <tbody>
+                            ${datasets.map(dataset => {
+                                const typeIcon = getTypeIcon(dataset.type);
+                                const typeColor = getTypeColor(dataset.type);
+                                
+                                return `
+                                    <tr onclick="showDatasetDetails('${dataset.id}')" style="cursor: pointer;">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-${typeIcon} text-${typeColor} me-2"></i>
+                                                <div>
+                                                    <div class="fw-semibold">${dataset.name}</div>
+                                                    ${dataset.description ? 
+                                                        `<div class="small text-muted text-truncate" style="max-width: 200px;">${dataset.description}</div>` 
+                                                        : ''
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-${typeColor}-subtle text-${typeColor} text-capitalize">
+                                                ${dataset.type}
+                                            </span>
+                                        </td>
+                                        <td>${dataset.record_count?.toLocaleString() || 0}</td>
+                                        <td>${formatFileSize(dataset.size)}</td>
+                                        ${showDetails ? `
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" style="width: ${(dataset.quality_score || 0) * 100}%">
+                                                        ${Math.round((dataset.quality_score || 0) * 100)}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1">
+                                                    ${(dataset.tags || []).slice(0, 2).map(tag => 
+                                                        `<span class="badge bg-secondary-subtle text-secondary small">${tag}</span>`
+                                                    ).join('')}
+                                                </div>
+                                            </td>
+                                        ` : ''}
+                                        <td>${formatRelativeTime(dataset.created_at)}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showDatasetDetails('${dataset.id}')">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success" onclick="event.stopPropagation(); exportSingleDataset('${dataset.id}')">
+                                                    <i class="bi bi-download"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = datasetsHTML;
+}
+
+function updatePagination() {
+    const container = document.getElementById('paginationContainer');
+    const pagination = document.getElementById('pagination');
     
-    // Create new dataset
-    function createDataset() {
-        const name = document.getElementById('dataset-name').value;
-        const description = document.getElementById('dataset-description').value;
-        const sourceType = document.getElementById('dataset-source-type').value;
-        
-        if (!name) {
-            alert('Dataset name is required');
-            return;
+    if (filteredDatasets.length <= itemsPerPage) {
+        container.style.display = 'none';
+        return;
+    }
+
+    const totalPages = Math.ceil(filteredDatasets.length / itemsPerPage);
+    let paginationHTML = '';
+
+    // Previous button
+    paginationHTML += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+    // Page numbers
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+
+    if (startPage > 1) {
+        paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1)">1</a></li>`;
+        if (startPage > 2) {
+            paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
         }
-        
-        fetch('/api/datasets', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name,
-                description,
-                source_type: sourceType,
-                config: {}
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('createDatasetModal'));
-            modal.hide();
-            
-            // Reset form
-            document.getElementById('create-dataset-form').reset();
-            
-            // Reload datasets
-            loadDatasets();
-        })
-        .catch(error => {
-            console.error('Error creating dataset:', error);
-            alert(`Error creating dataset: ${error.message}`);
-        });
     }
-    
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
-        loadDatasets();
+
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `;
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+        paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a></li>`;
+    }
+
+    // Next button
+    paginationHTML += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    `;
+
+    pagination.innerHTML = paginationHTML;
+    container.style.display = 'block';
+}
+
+async function showDatasetDetails(datasetId) {
+    try {
+        currentDatasetId = datasetId;
+        const modal = new bootstrap.Modal(document.getElementById('datasetModal'));
         
-        // Set up create dataset form
-        document.getElementById('create-dataset-button').addEventListener('click', createDataset);
-    });
+        // Show loading
+        document.getElementById('datasetDetails').innerHTML = `
+            <div class="text-center py-3">
+                <div class="loading-spinner mb-2"></div>
+                <p class="text-muted">Loading dataset details...</p>
+            </div>
+        `;
+        
+        modal.show();
+
+        const response = await fetch(`/api/datasets/${datasetId}`);
+        const dataset = await response.json();
+
+        if (response.ok) {
+            displayDatasetDetails(dataset);
+        } else {
+            throw new Error(dataset.detail || 'Failed to load dataset details');
+        }
+    } catch (error) {
+        document.getElementById('datasetDetails').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error loading dataset: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayDatasetDetails(dataset) {
+    document.getElementById('datasetModalTitle').innerHTML = `
+        <i class="bi bi-database me-2"></i>${dataset.name}
+    `;
+
+    const detailsHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary mb-3">Basic Information</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td class="fw-semibold">Name:</td>
+                        <td>${dataset.name}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Type:</td>
+                        <td>
+                            <span class="badge bg-${getTypeColor(dataset.type)}-subtle text-${getTypeColor(dataset.type)} text-capitalize">
+                                ${dataset.type}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Records:</td>
+                        <td>${dataset.record_count?.toLocaleString() || 0}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Size:</td>
+                        <td>${formatFileSize(dataset.size)}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Created:</td>
+                        <td>${new Date(dataset.created_at).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Modified:</td>
+                        <td>${new Date(dataset.updated_at).toLocaleString()}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-success mb-3">Quality Metrics</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small">Overall Quality</span>
+                        <span class="small fw-semibold">${Math.round((dataset.quality_score || 0) * 100)}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: ${(dataset.quality_score || 0) * 100}%"></div>
+                    </div>
+                </div>
+                
+                ${dataset.processing_stats ? `
+                    <div class="small">
+                        <div class="d-flex justify-content-between">
+                            <span>Valid Records:</span>
+                            <span class="fw-semibold">${dataset.processing_stats.valid_records || 0}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Cleaned Records:</span>
+                            <span class="fw-semibold">${dataset.processing_stats.cleaned_records || 0}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Enhanced Records:</span>
+                            <span class="fw-semibold">${dataset.processing_stats.enhanced_records || 0}</span>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+        
+        ${dataset.description ? `
+            <div class="mt-4">
+                <h6 class="text-info mb-2">Description</h6>
+                <p class="text-muted">${dataset.description}</p>
+            </div>
+        ` : ''}
+        
+        ${dataset.tags && dataset.tags.length > 0 ? `
+            <div class="mt-4">
+                <h6 class="text-warning mb-2">Tags</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    ${dataset.tags.map(tag => `<span class="badge bg-secondary-subtle text-secondary">${tag}</span>`).join('')}
+                </div>
+            </div>
+        ` : ''}
+        
+        ${dataset.sample_data && dataset.sample_data.length > 0 ? `
+            <div class="mt-4">
+                <h6 class="text-primary mb-2">Sample Data</h6>
+                <div class="bg-light p-3 rounded">
+                    <pre class="mb-0 small"><code>${JSON.stringify(dataset.sample_data.slice(0, 3), null, 2)}</code></pre>
+                    ${dataset.sample_data.length > 3 ? '<div class="text-muted small mt-2">... and more records</div>' : ''}
+                </div>
+            </div>
+        ` : ''}
+        
+        ${dataset.processing_history && dataset.processing_history.length > 0 ? `
+            <div class="mt-4">
+                <h6 class="text-secondary mb-2">Processing History</h6>
+                <div class="timeline">
+                    ${dataset.processing_history.slice(0, 5).map(item => `
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <div class="fw-semibold">${item.operation}</div>
+                                <div class="small text-muted">${new Date(item.timestamp).toLocaleString()}</div>
+                                ${item.details ? `<div class="small">${item.details}</div>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    document.getElementById('datasetDetails').innerHTML = detailsHTML;
+}
+
+// Utility functions
+function getTypeIcon(type) {
+    const icons = {
+        'scraped': 'globe',
+        'processed': 'cpu',
+        'cleaned': 'funnel',
+        'enhanced': 'stars',
+        'imported': 'upload'
+    };
+    return icons[type] || 'database';
+}
+
+function getTypeColor(type) {
+    const colors = {
+        'scraped': 'primary',
+        'processed': 'info',
+        'cleaned': 'success',
+        'enhanced': 'warning',
+        'imported': 'secondary'
+    };
+    return colors[type] || 'secondary';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
+    if (diffInHours < 24 * 7) return `${Math.floor(diffInHours / 24)}d ago`;
+    return date.toLocaleDateString();
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function showLoading() {
+    document.getElementById('datasetsContainer').innerHTML = `
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="loading-spinner mb-3"></div>
+                <p class="text-muted">Loading datasets...</p>
+            </div>
+        </div>
+    `;
+}
+
+function showError(message) {
+    document.getElementById('datasetsContainer').innerHTML = `
+        <div class="col-12">
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${message}
+            </div>
+        </div>
+    `;
+}
+
+function toggleView() {
+    displayDatasets();
+}
+
+function changePage(page) {
+    if (page >= 1 && page <= Math.ceil(filteredDatasets.length / itemsPerPage)) {
+        currentPage = page;
+        displayDatasets();
+        updatePagination();
+    }
+}
+
+// Placeholder functions for modal actions
+function editDataset() {
+    showToast('Edit functionality coming soon!', 'info');
+}
+
+function exportSingleDataset(datasetId = null) {
+    const id = datasetId || currentDatasetId;
+    showToast('Export functionality coming soon!', 'info');
+}
+
+function showDeleteConfirm() {
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const dataset = datasets.find(d => d.id === currentDatasetId);
+    
+    document.getElementById('deleteDatasetInfo').innerHTML = `
+        <p><strong>Dataset:</strong> ${dataset.name}</p>
+        <p><strong>Records:</strong> ${dataset.record_count?.toLocaleString() || 0}</p>
+        <p><strong>Size:</strong> ${formatFileSize(dataset.size)}</p>
+    `;
+    
+    bootstrap.Modal.getInstance(document.getElementById('datasetModal')).hide();
+    deleteModal.show();
+}
+
+function deleteDataset() {
+    showToast('Delete functionality coming soon!', 'info');
+    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+}
+
+function importDataset() {
+    showToast('Import functionality coming soon!', 'info');
+}
+
+function exportDatasets() {
+    showToast('Bulk export functionality coming soon!', 'info');
+}
 </script>
 {% endblock %}

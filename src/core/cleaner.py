@@ -36,6 +36,7 @@ except Exception as e:
     nlp = None
 
 from ..core.config import get_settings
+from .advanced_cleaner import AdvancedTextCleaner
 
 settings = get_settings()
 
@@ -51,6 +52,7 @@ class TextCleaner:
         min_length: Optional[int] = None,
         max_length: Optional[int] = None,
         language_filter: Optional[List[str]] = None,
+        use_advanced_cleaning: bool = False,
     ):
         """
         Initialize the text cleaner.
@@ -62,6 +64,7 @@ class TextCleaner:
             min_length: Minimum text length (in characters)
             max_length: Maximum text length (in characters)
             language_filter: List of allowed language codes
+            use_advanced_cleaning: Whether to use advanced cleaning with grammar correction
         """
         self.remove_html = remove_html
         self.fix_encoding = fix_encoding
@@ -69,6 +72,17 @@ class TextCleaner:
         self.min_length = min_length
         self.max_length = max_length
         self.language_filter = language_filter or settings.LANGUAGES
+        self.use_advanced_cleaning = use_advanced_cleaning
+        
+        # Initialize advanced cleaner if requested
+        self.advanced_cleaner = None
+        if self.use_advanced_cleaning:
+            try:
+                self.advanced_cleaner = AdvancedTextCleaner()
+                logger.info("Advanced text cleaner initialized")
+            except Exception as e:
+                logger.warning(f"Could not initialize advanced cleaner: {e}")
+                self.use_advanced_cleaning = False
     
     def clean_text(self, text: str) -> str:
         """
@@ -83,6 +97,12 @@ class TextCleaner:
         if not text:
             return ""
         
+        # Use advanced cleaning if enabled
+        if self.use_advanced_cleaning and self.advanced_cleaner:
+            cleaned_text = self.advanced_cleaner.clean_text(text)
+            return cleaned_text or ""  # Return empty string if advanced cleaner filters out text
+        
+        # Standard cleaning pipeline
         # Fix encoding issues
         if self.fix_encoding:
             text = self._fix_encoding(text)
@@ -96,6 +116,26 @@ class TextCleaner:
             text = self._normalize_whitespace(text)
         
         return text
+    
+    def clean_text_advanced(self, text: str) -> Optional[str]:
+        """
+        Clean text using advanced methods with grammar correction and entity filtering.
+        
+        Args:
+            text: Input text
+            
+        Returns:
+            Cleaned text or None if text should be filtered out
+        """
+        if not self.advanced_cleaner:
+            # Initialize advanced cleaner on demand
+            try:
+                self.advanced_cleaner = AdvancedTextCleaner()
+            except Exception as e:
+                logger.error(f"Could not initialize advanced cleaner: {e}")
+                return self.clean_text(text)  # Fallback to standard cleaning
+        
+        return self.advanced_cleaner.clean_text(text)
     
     def _fix_encoding(self, text: str) -> str:
         """

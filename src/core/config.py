@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     
     # Database
-    DATABASE_DRIVER: str = os.getenv("DATABASE_DRIVER", "postgresql")
+    DATABASE_DRIVER: str = os.getenv("DATABASE_DRIVER", "sqlite")
     DATABASE_HOST: str = os.getenv("DATABASE_HOST", "localhost")
     DATABASE_PORT: str = os.getenv("DATABASE_PORT", "5432")
     DATABASE_USER: str = os.getenv("DATABASE_USER", "postgres")
@@ -48,6 +48,22 @@ class Settings(BaseSettings):
     MAX_CONTENT_LENGTH: int = 1_000_000  # Characters
     DEFAULT_CHUNK_SIZE: int = 1000
     LANGUAGES: List[str] = ["en"]  # Default supported languages
+    
+    # Advanced cleaner settings
+    ADVANCED_CLEANER_WORKING_DIR: str = "data"
+    ADVANCED_CLEANER_TARGET_LANGUAGE: str = "en"
+    ADVANCED_CLEANER_MIN_WORDS: int = 5  # Lowered from 30 for testing
+    ADVANCED_CLEANER_MAX_SPECIAL_CHAR_RATIO: float = 0.1
+    ADVANCED_CLEANER_USE_SPACY: bool = True
+    ADVANCED_CLEANER_USE_LANGUAGE_TOOL: bool = True
+    
+    # Advanced scraper settings
+    SCRAPER_NUM_THREADS: int = 8
+    SCRAPER_USE_SELENIUM_FALLBACK: bool = True
+    SCRAPER_RATE_LIMIT_DELAY: float = 0.5
+    SCRAPER_TARGET_LANGUAGE: str = "en"
+    SCRAPER_MAX_SUB_URLS: int = 100
+    SCRAPER_WORKING_DIR: str = "data"
     
     # Paths
     DATA_DIR: Path = Path(os.getenv("DATA_DIR", os.path.join(os.getcwd(), "data")))

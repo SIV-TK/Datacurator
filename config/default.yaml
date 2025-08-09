@@ -17,6 +17,76 @@ web_scraping:
   default_delay: 1.0
   max_pages: 100
 
+# Advanced scraper settings
+scraper:
+  num_threads: 8
+  use_selenium_fallback: true
+  rate_limit_delay: 0.5
+  target_language: en
+  max_sub_urls: 100
+  working_dir: data
+  exclude_domains:
+    - imgur.com
+    - instagram.com 
+    - discord.gg
+    - youtube.com
+    - twitter.com
+    - reddit.com
+    - spotify.com
+    - github.com
+    - facebook.com
+    - wikipedia.org
+    - giphy.com
+    - vimeo.com
+    - twitch.tv
+    - soundcloud.com
+    - google.com
+  exclude_extensions:
+    - .png
+    - .jpg
+    - .jpeg
+    - .gif
+    - .pdf
+    - .mp4
+    - .mp3
+    - .zip
+    - .rar
+    - .doc
+    - .docx
+    - .ppt
+    - .pptx
+    - .xls
+    - .xlsx
+    - .exe
+    - .bin
+
+# Advanced text cleaner settings
+advanced_cleaner:
+  working_dir: data
+  target_language: en
+  min_words: 30
+  max_special_char_ratio: 0.1
+  use_spacy: true
+  use_language_tool: true
+  excluded_entities:
+    - google
+    - microsoft
+    - apple
+    - amazon
+    - facebook
+    - twitter
+    - instagram
+    - tesla
+    - netflix
+    - adobe
+    - ibm
+    - intel
+    - nvidia
+    - coca-cola
+    - pepsi
+    - john doe
+    - jane doe
+
 # Data processing settings
 data_processing:
   chunk_size: 1000

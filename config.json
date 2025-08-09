@@ -1,0 +1,9 @@
+{
+  "num_threads": 8,
+  "use_selenium_fallback": true,
+  "working_dir": "data",
+  "rate_limit_delay": 0.5,
+  "target_language": "en",
+  "max_sub_urls": 100,
+  "user_agent": "DataCurator-AdvancedScraper/1.0 (+https://github.com/SIV-TK/Datacurator)"
+}

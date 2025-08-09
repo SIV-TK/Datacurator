@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Data Curator - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Dashboard</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Datasets</h5>
+                    <h1 id="dataset-count" class="display-4">--</h1>
+                    <p class="card-text">Total datasets in the system</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Records</h5>
+                    <h1 id="record-count" class="display-4">--</h1>
+                    <p class="card-text">Total data records</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Jobs</h5>
+                    <h1 id="job-count" class="display-4">--</h1>
+                    <p class="card-text">Processing jobs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Datasets</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recent-datasets">
+                        <div class="spinner-container">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Jobs</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recent-jobs">
+                        <div class="spinner-container">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Data Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="data-chart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load dashboard data
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch datasets
+        fetch('/api/datasets')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('dataset-count').textContent = data.length;
+                
+                // Display recent datasets
+                const recentDatasetsEl = document.getElementById('recent-datasets');
+                if (data.length === 0) {
+                    recentDatasetsEl.innerHTML = '<p class="text-muted">No datasets found.</p>';
+                    return;
+                }
+                
+                let html = '<div class="list-group">';
+                data.slice(0, 5).forEach(dataset => {
+                    html += `
+                        <a href="/datasets" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">${dataset.name}</h5>
+                                <small>${formatDate(dataset.created_at)}</small>
+                            </div>
+                            <p class="mb-1">${dataset.description || 'No description'}</p>
+                            <small>${dataset.total_records} records</small>
+                        </a>
+                    `;
+                });
+                html += '</div>';
+                recentDatasetsEl.innerHTML = html;
+                
+                // Initialize chart data
+                let totalRecords = 0;
+                let cleanedRecords = 0;
+                
+                data.forEach(dataset => {
+                    totalRecords += dataset.total_records;
+                    cleanedRecords += dataset.cleaned_records;
+                });
+                
+                document.getElementById('record-count').textContent = totalRecords;
+                
+                // Create chart
+                const ctx = document.getElementById('data-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.slice(0, 5).map(d => d.name),
+                        datasets: [
+                            {
+                                label: 'Total Records',
+                                data: data.slice(0, 5).map(d => d.total_records),
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgb(54, 162, 235)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Cleaned Records',
+                                data: data.slice(0, 5).map(d => d.cleaned_records),
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgb(75, 192, 192)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading datasets:', error);
+                document.getElementById('recent-datasets').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading datasets: ${error.message}
+                    </div>
+                `;
+            });
+        
+        // Fetch jobs
+        fetch('/api/jobs')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('job-count').textContent = data.length;
+                
+                // Display recent jobs
+                const recentJobsEl = document.getElementById('recent-jobs');
+                if (data.length === 0) {
+                    recentJobsEl.innerHTML = '<p class="text-muted">No jobs found.</p>';
+                    return;
+                }
+                
+                let html = '<div class="list-group">';
+                data.slice(0, 5).forEach(job => {
+                    let statusClass = 'bg-secondary';
+                    if (job.status === 'completed') statusClass = 'bg-success';
+                    if (job.status === 'failed') statusClass = 'bg-danger';
+                    if (job.status === 'running') statusClass = 'bg-primary';
+                    
+                    html += `
+                        <a href="/jobs" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">${job.job_type.charAt(0).toUpperCase() + job.job_type.slice(1)} Job</h5>
+                                <small>${formatDate(job.created_at)}</small>
+                            </div>
+                            <p class="mb-1">
+                                <span class="badge ${statusClass}">${job.status}</span>
+                                ${job.details.dataset_id ? `Dataset ID: ${job.details.dataset_id}` : ''}
+                            </p>
+                        </a>
+                    `;
+                });
+                html += '</div>';
+                recentJobsEl.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading jobs:', error);
+                document.getElementById('recent-jobs').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading jobs: ${error.message}
+                    </div>
+                `;
+            });
+    });
+</script>
+{% endblock %}
