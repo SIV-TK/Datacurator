@@ -1,0 +1,71 @@
+[
+  {
+    "title": "Artificial Intelligence",
+    "content": "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans.",
+    "url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "timestamp": "2025-08-09T10:53:29.893467",
+    "cleaned": true,
+    "cleaned_at": "2025-08-09T10:53:29.895486",
+    "stats": {
+      "char_count": 144,
+      "word_count": 18,
+      "sentence_count": 1
+    },
+    "keywords": [
+      "intelligence",
+      "artificial",
+      "demonstrated",
+      "machines",
+      "opposed"
+    ],
+    "summary": "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans.",
+    "enhanced": true,
+    "enhanced_at": "2025-08-09T10:53:30.299712"
+  },
+  {
+    "title": "Machine Learning",
+    "content": "Machine learning (ML) is a field of inquiry devoted to understanding and building methods that 'learn', that is, methods that leverage data to improve performance on some set of tasks.",
+    "url": "https://en.wikipedia.org/wiki/Machine_learning",
+    "timestamp": "2025-08-09T10:53:29.893501",
+    "cleaned": true,
+    "cleaned_at": "2025-08-09T10:53:29.895510",
+    "stats": {
+      "char_count": 184,
+      "word_count": 30,
+      "sentence_count": 1
+    },
+    "keywords": [
+      "methods",
+      "machine",
+      "learning",
+      "field",
+      "inquiry"
+    ],
+    "summary": "Machine learning (ML) is a field of inquiry devoted to understanding and building methods that 'learn', that is, methods that leverage data to improve performance on some set of tasks.",
+    "enhanced": true,
+    "enhanced_at": "2025-08-09T10:53:30.300173"
+  },
+  {
+    "title": "Deep Learning",
+    "content": "Deep learning is part of a broader family of machine learning methods based on artificial neural networks with representation learning.",
+    "url": "https://en.wikipedia.org/wiki/Deep_learning",
+    "timestamp": "2025-08-09T10:53:29.893506",
+    "cleaned": true,
+    "cleaned_at": "2025-08-09T10:53:29.895516",
+    "stats": {
+      "char_count": 135,
+      "word_count": 20,
+      "sentence_count": 1
+    },
+    "keywords": [
+      "learning",
+      "deep",
+      "part",
+      "broader",
+      "family"
+    ],
+    "summary": "Deep learning is part of a broader family of machine learning methods based on artificial neural networks with representation learning.",
+    "enhanced": true,
+    "enhanced_at": "2025-08-09T10:53:30.300508"
+  }
+]

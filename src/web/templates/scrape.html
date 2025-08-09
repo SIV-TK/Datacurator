@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Data Curator - Web Scraping{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Web Scraping</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Scrape Websites</h5>
+        </div>
+        <div class="card-body">
+            <form id="scrape-form">
+                <div class="mb-3">
+                    <label for="urls" class="form-label">URLs to Scrape</label>
+                    <textarea class="form-control" id="urls" rows="3" placeholder="Enter one URL per line" required></textarea>
+                    <div class="form-text">Enter the URLs you want to scrape, one per line.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">CSS Selectors</label>
+                    <div id="selectors-container">
+                        <div class="row mb-2 selector-row">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control selector-field" placeholder="Field name (e.g., title)" required>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" class="form-control selector-value" placeholder="CSS selector (e.g., h1.title)" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger remove-selector">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" id="add-selector">
+                        <i class="bi bi-plus-lg"></i> Add Selector
+                    </button>
+                    <div class="form-text">Define what content to extract using CSS selectors.</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="follow-links">
+                            <label class="form-check-label" for="follow-links">Follow Links</label>
+                        </div>
+                        <div class="form-text">Crawl links found on the pages (same domain only).</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="max-pages" class="form-label">Maximum Pages</label>
+                        <input type="number" class="form-control" id="max-pages" value="10" min="1" max="100">
+                        <div class="form-text">Maximum number of pages to scrape.</div>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-primary" id="start-scrape">
+                    <i class="bi bi-globe"></i> Start Scraping
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card" id="result-card" style="display: none;">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Scraping Results</h5>
+        </div>
+        <div class="card-body">
+            <div id="scrape-results">
+                <div class="spinner-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="ms-2">Scraping in progress...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add and remove selectors
+    function setupSelectorControls() {
+        // Add selector
+        document.getElementById('add-selector').addEventListener('click', function() {
+            const container = document.getElementById('selectors-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'row mb-2 selector-row';
+            newRow.innerHTML = `
+                <div class="col-md-5">
+                    <input type="text" class="form-control selector-field" placeholder="Field name (e.g., title)" required>
+                </div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control selector-value" placeholder="CSS selector (e.g., h1.title)" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger remove-selector">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(newRow);
+            
+            // Attach remove event to the new row
+            newRow.querySelector('.remove-selector').addEventListener('click', function() {
+                container.removeChild(newRow);
+            });
+        });
+        
+        // Remove selector (initial row)
+        document.querySelector('.remove-selector').addEventListener('click', function() {
+            const container = document.getElementById('selectors-container');
+            if (container.children.length > 1) {
+                container.removeChild(this.closest('.selector-row'));
+            }
+        });
+    }
+    
+    // Start scraping
+    function startScraping() {
+        // Get form values
+        const urlsText = document.getElementById('urls').value;
+        const urls = urlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0);
+        
+        if (urls.length === 0) {
+            alert('Please enter at least one URL');
+            return;
+        }
+        
+        // Get selectors
+        const selectors = {};
+        const selectorRows = document.querySelectorAll('.selector-row');
+        
+        for (const row of selectorRows) {
+            const field = row.querySelector('.selector-field').value.trim();
+            const value = row.querySelector('.selector-value').value.trim();
+            
+            if (field && value) {
+                selectors[field] = value;
+            }
+        }
+        
+        if (Object.keys(selectors).length === 0) {
+            alert('Please add at least one selector');
+            return;
+        }
+        
+        const followLinks = document.getElementById('follow-links').checked;
+        const maxPages = parseInt(document.getElementById('max-pages').value);
+        
+        // Show results card
+        document.getElementById('result-card').style.display = 'block';
+        
+        // Start scraping job
+        fetch('/api/scrape', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                urls,
+                selectors,
+                follow_links: followLinks,
+                max_pages: maxPages,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            const jobId = data.job_id;
+            
+            // Poll job status
+            const resultsContainer = document.getElementById('scrape-results');
+            
+            const checkJobStatus = () => {
+                fetch(`/api/jobs/${jobId}`)
+                    .then(response => response.json())
+                    .then(job => {
+                        if (job.status === 'pending' || job.status === 'running') {
+                            // Still running, continue polling
+                            setTimeout(checkJobStatus, 2000);
+                            
+                            // Update status message
+                            resultsContainer.innerHTML = `
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <div>
+                                            <strong>Job ID:</strong> ${jobId}<br>
+                                            <strong>Status:</strong> ${job.status}<br>
+                                            <strong>Started:</strong> ${formatDate(job.created_at)}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (job.status === 'completed') {
+                            // Job completed
+                            resultsContainer.innerHTML = `
+                                <div class="alert alert-success">
+                                    <strong>Scraping completed!</strong><br>
+                                    <strong>Job ID:</strong> ${jobId}<br>
+                                    <strong>Dataset ID:</strong> ${job.details.dataset_id}<br>
+                                    <strong>Records:</strong> ${job.details.record_count || 0}<br>
+                                    <strong>Completed:</strong> ${formatDate(job.created_at)}
+                                </div>
+                                <a href="/datasets" class="btn btn-primary">
+                                    <i class="bi bi-database"></i> View Dataset
+                                </a>
+                            `;
+                        } else {
+                            // Job failed
+                            resultsContainer.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <strong>Scraping failed!</strong><br>
+                                    <strong>Job ID:</strong> ${jobId}<br>
+                                    <strong>Error:</strong> ${job.details.error || 'Unknown error'}<br>
+                                    <strong>Time:</strong> ${formatDate(job.created_at)}
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking job status:', error);
+                        resultsContainer.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle"></i> Error checking job status: ${error.message}
+                            </div>
+                        `;
+                    });
+            };
+            
+            // Start polling
+            checkJobStatus();
+        })
+        .catch(error => {
+            console.error('Error starting scrape job:', error);
+            document.getElementById('scrape-results').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Error starting scrape job: ${error.message}
+                </div>
+            `;
+        });
+    }
+    
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        setupSelectorControls();
+        
+        // Start scraping button
+        document.getElementById('start-scrape').addEventListener('click', startScraping);
+    });
+</script>
+{% endblock %}

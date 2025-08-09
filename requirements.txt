@@ -1,0 +1,40 @@
+# Web scraping
+requests==2.31.0
+beautifulsoup4==4.12.2
+selenium==4.15.2
+playwright==1.40.0
+
+# Data processing
+pandas==2.1.1
+numpy==1.26.0
+dask==2023.10.1
+pyarrow==14.0.1
+
+# Text processing
+nltk==3.8.1
+spacy==3.7.2
+transformers>=4.35.0
+langdetect==1.0.9
+python-magic==0.4.27
+
+# Database
+pymongo==4.6.0
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+
+# AI/ML
+openai==1.3.0
+huggingface_hub>=0.17.0
+
+# Utils
+python-dotenv==1.0.0
+tqdm==4.66.1
+loguru==0.7.2
+click==8.1.7
+chardet==5.2.0
+
+# Web API
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.4.2
+pydantic-settings==2.0.3

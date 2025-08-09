@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Artificial Intelligence",
+    "content": "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans.",
+    "url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "timestamp": "2025-08-09T10:53:29.893467",
+    "cleaned": true,
+    "cleaned_at": "2025-08-09T10:53:29.895486"
+  },
+  {
+    "title": "Machine Learning",
+    "content": "Machine learning (ML) is a field of inquiry devoted to understanding and building methods that 'learn', that is, methods that leverage data to improve performance on some set of tasks.",
+    "url": "https://en.wikipedia.org/wiki/Machine_learning",
+    "timestamp": "2025-08-09T10:53:29.893501",
+    "cleaned": true,
+    "cleaned_at": "2025-08-09T10:53:29.895510"
+  },
+  {
+    "title": "Deep Learning",
+    "content": "Deep learning is part of a broader family of machine learning methods based on artificial neural networks with representation learning.",
+    "url": "https://en.wikipedia.org/wiki/Deep_learning",
+    "timestamp": "2025-08-09T10:53:29.893506",
+    "cleaned": true,
+    "cleaned_at": "2025-08-09T10:53:29.895516"
+  }
+]

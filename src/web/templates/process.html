@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Data Curator - File Processing{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">File Processing</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Process Files</h5>
+        </div>
+        <div class="card-body">
+            <form id="process-form" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="files" class="form-label">Files to Process</label>
+                    <input type="file" class="form-control" id="files" name="files" multiple required>
+                    <div class="form-text">
+                        Select files to process. Supported formats: CSV, JSON, JSONL, TXT, XML, HTML, PDF, DOCX, XLSX.
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="recursive" name="recursive">
+                        <label class="form-check-label" for="recursive">Process Directories Recursively</label>
+                    </div>
+                    <div class="form-text">For ZIP and other archive files, process all files in subdirectories.</div>
+                </div>
+                
+                <button type="button" class="btn btn-primary" id="start-process">
+                    <i class="bi bi-file-earmark-text"></i> Start Processing
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card" id="result-card" style="display: none;">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Processing Results</h5>
+        </div>
+        <div class="card-body">
+            <div id="process-results">
+                <div class="spinner-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="ms-2">Processing in progress...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">File Format Support</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6><i class="bi bi-file-earmark-text"></i> Text Files</h6>
+                    <ul class="list-unstyled">
+                        <li><span class="badge bg-success">TXT</span> Plain text files</li>
+                        <li><span class="badge bg-success">CSV</span> Comma-separated values</li>
+                        <li><span class="badge bg-success">TSV</span> Tab-separated values</li>
+                        <li><span class="badge bg-success">JSON</span> JSON files</li>
+                        <li><span class="badge bg-success">JSONL</span> JSON Lines</li>
+                        <li><span class="badge bg-success">XML</span> XML files</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="bi bi-file-earmark-richtext"></i> Document Files</h6>
+                    <ul class="list-unstyled">
+                        <li><span class="badge bg-warning">PDF</span> PDF documents</li>
+                        <li><span class="badge bg-warning">DOCX</span> Word documents</li>
+                        <li><span class="badge bg-warning">XLSX</span> Excel spreadsheets</li>
+                        <li><span class="badge bg-warning">PPTX</span> PowerPoint presentations</li>
+                        <li><span class="badge bg-warning">HTML</span> HTML files</li>
+                        <li><span class="badge bg-warning">MD</span> Markdown files</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="bi bi-file-earmark-zip"></i> Other Files</h6>
+                    <ul class="list-unstyled">
+                        <li><span class="badge bg-info">ZIP</span> ZIP archives</li>
+                        <li><span class="badge bg-info">TAR</span> TAR archives</li>
+                        <li><span class="badge bg-info">GZ</span> Gzipped files</li>
+                        <li><span class="badge bg-info">BZ2</span> Bzip2 files</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Start processing
+    function startProcessing() {
+        const fileInput = document.getElementById('files');
+        const recursive = document.getElementById('recursive').checked;
+        
+        if (fileInput.files.length === 0) {
+            alert('Please select at least one file');
+            return;
+        }
+        
+        // Show results card
+        document.getElementById('result-card').style.display = 'block';
+        
+        // Create form data
+        const formData = new FormData();
+        for (const file of fileInput.files) {
+            formData.append('files', file);
+        }
+        formData.append('recursive', recursive);
+        
+        // Start processing job
+        fetch('/api/process', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            const jobId = data.job_id;
+            
+            // Poll job status
+            const resultsContainer = document.getElementById('process-results');
+            
+            const checkJobStatus = () => {
+                fetch(`/api/jobs/${jobId}`)
+                    .then(response => response.json())
+                    .then(job => {
+                        if (job.status === 'pending' || job.status === 'running') {
+                            // Still running, continue polling
+                            setTimeout(checkJobStatus, 2000);
+                            
+                            // Update status message
+                            resultsContainer.innerHTML = `
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <div>
+                                            <strong>Job ID:</strong> ${jobId}<br>
+                                            <strong>Status:</strong> ${job.status}<br>
+                                            <strong>Files:</strong> ${job.details.file_count || 0}<br>
+                                            <strong>Started:</strong> ${formatDate(job.created_at)}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (job.status === 'completed') {
+                            // Job completed
+                            resultsContainer.innerHTML = `
+                                <div class="alert alert-success">
+                                    <strong>Processing completed!</strong><br>
+                                    <strong>Job ID:</strong> ${jobId}<br>
+                                    <strong>Dataset ID:</strong> ${job.details.dataset_id}<br>
+                                    <strong>Records:</strong> ${job.details.record_count || 0}<br>
+                                    <strong>Completed:</strong> ${formatDate(job.created_at)}
+                                </div>
+                                <a href="/datasets" class="btn btn-primary">
+                                    <i class="bi bi-database"></i> View Dataset
+                                </a>
+                            `;
+                        } else {
+                            // Job failed
+                            resultsContainer.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <strong>Processing failed!</strong><br>
+                                    <strong>Job ID:</strong> ${jobId}<br>
+                                    <strong>Error:</strong> ${job.details.error || 'Unknown error'}<br>
+                                    <strong>Time:</strong> ${formatDate(job.created_at)}
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking job status:', error);
+                        resultsContainer.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle"></i> Error checking job status: ${error.message}
+                            </div>
+                        `;
+                    });
+            };
+            
+            // Start polling
+            checkJobStatus();
+        })
+        .catch(error => {
+            console.error('Error starting process job:', error);
+            document.getElementById('process-results').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Error starting process job: ${error.message}
+                </div>
+            `;
+        });
+    }
+    
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Start processing button
+        document.getElementById('start-process').addEventListener('click', startProcessing);
+    });
+</script>
+{% endblock %}
